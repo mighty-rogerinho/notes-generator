@@ -7,7 +7,9 @@ from notes_generator import gemini_client
 
 @pytest.fixture(autouse=True)
 def three_keys(monkeypatch):
-    monkeypatch.setattr(gemini_client, "API_KEYS", ["key-1", "key-2", "key-3"])
+    monkeypatch.setenv("GOOGLE_API_KEY_1", "key-1")
+    monkeypatch.setenv("GOOGLE_API_KEY_2", "key-2")
+    monkeypatch.setenv("GOOGLE_API_KEY_3", "key-3")
 
 
 @pytest.fixture(autouse=True)

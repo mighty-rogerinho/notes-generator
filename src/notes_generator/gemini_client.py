@@ -3,22 +3,22 @@ import os
 from google import genai
 from .spinner_utils import spinner
 
-API_KEYS = [
-    os.getenv("GOOGLE_API_KEY_1"),
-    os.getenv("GOOGLE_API_KEY_2"),
-    os.getenv("GOOGLE_API_KEY_3")
-]
-
 def generate_notes(prompt_text):
+    api_keys = [
+        os.getenv("GOOGLE_API_KEY_1"),
+        os.getenv("GOOGLE_API_KEY_2"),
+        os.getenv("GOOGLE_API_KEY_3")
+    ]
+
     done_event = threading.Event()
-    
+
     t = threading.Thread(target=spinner, args=(done_event, "Generating notes with Gemini AI"))
     t.start()
 
     try:
         last_exception = None
 
-        for key_index, key in enumerate(API_KEYS):
+        for key_index, key in enumerate(api_keys):
             try:
                 client = genai.Client(api_key=key)
 

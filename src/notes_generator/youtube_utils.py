@@ -4,7 +4,6 @@ from datetime import datetime
 from pytubefix import extract
 from youtube_transcript_api import YouTubeTranscriptApi
 
-API_KEY = os.getenv("YOUTUBE_API_KEY")
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos"
 
 def get_video_info(url):
@@ -14,7 +13,7 @@ def get_video_info(url):
     response = requests.get(YOUTUBE_API_URL, params={
         "part": "snippet",
         "id": video_id,
-        "key": API_KEY
+        "key": os.getenv("YOUTUBE_API_KEY")
     })
     response.raise_for_status()
 
