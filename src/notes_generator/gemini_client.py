@@ -8,7 +8,13 @@ class AllKeysExhaustedError(RuntimeError):
 
 
 def generate_notes(prompt_text):
-    api_keys = get_gemini_api_keys()
+    api_keys = [key for key in get_gemini_api_keys() if key]
+
+    if not api_keys:
+        raise AllKeysExhaustedError(
+            "No Gemini API keys are configured. Set GOOGLE_API_KEY_1 "
+            "(and optionally _2/_3) in your .env file."
+        )
 
     print("Generating notes with Gemini AI...")
 

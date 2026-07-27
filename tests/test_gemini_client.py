@@ -63,3 +63,15 @@ def test_generate_notes_raises_all_keys_exhausted_when_every_key_hits_quota():
     with patch.object(gemini_client.genai, "Client", return_value=exhausted_client):
         with pytest.raises(AllKeysExhaustedError, match="All API keys exhausted"):
             gemini_client.generate_notes("some prompt")
+
+
+def test_generate_notes_raises_clean_error_when_no_keys_configured_at_all(monkeypatch):
+    monkeypatch.delenv("GOOGLE_API_KEY_1", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY_2", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY_3", raising=False)
+
+    with patch.object(gemini_client.genai, "Client") as mock_client:
+        with pytest.raises(AllKeysExhaustedError, match="No Gemini API keys are configured"):
+            gemini_client.generate_notes("some prompt")
+
+    mock_client.assert_not_called()
