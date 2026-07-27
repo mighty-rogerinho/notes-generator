@@ -1,10 +1,32 @@
 import os
+from pathlib import Path
 
-def select_prompt(prompt_folder):
+DEFAULT_PROMPTS_DIR = Path(__file__).parent / "prompts"
+
+
+def parse_prompt_file(file_path):
+    """
+    Read a prompt .md file and split off its optional 'PROMPT_INPUTS:' header line.
+    Returns (prompt_text, prompt_inputs).
+    """
+    with open(file_path, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+
+    prompt_inputs = []
+    if lines and lines[0].startswith("PROMPT_INPUTS:"):
+        prompt_inputs = [x.strip() for x in lines[0].replace("PROMPT_INPUTS:", "").split(",")]
+        prompt_text = "".join(lines[1:])  # remove metadata line
+    else:
+        prompt_text = "".join(lines)
+
+    return prompt_text, prompt_inputs
+
+
+def select_prompt(prompt_folder=DEFAULT_PROMPTS_DIR):
     """
     Dynamically loads all .md prompt files from a folder,
     asks the user to choose one, and returns:
-    (prompt_text, filename, prompt_inputs)
+    (prompt_text, prompt_inputs)
     """
 
     # 1. Get all .md files
@@ -35,15 +57,7 @@ def select_prompt(prompt_folder):
     file_path = os.path.join(prompt_folder, selected_file)
 
     # 4. Read file and parse metadata
-    with open(file_path, "r", encoding="utf-8") as f:
-        lines = f.readlines()
-
-    prompt_inputs = []
-    if lines and lines[0].startswith("PROMPT_INPUTS:"):
-        prompt_inputs = [x.strip() for x in lines[0].replace("PROMPT_INPUTS:", "").split(",")]
-        prompt_text = "".join(lines[1:])  # remove metadata line
-    else:
-        prompt_text = "".join(lines)
+    prompt_text, prompt_inputs = parse_prompt_file(file_path)
 
     print(f"\n✅ Using prompt file: {selected_file}")
 

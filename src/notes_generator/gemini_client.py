@@ -1,7 +1,7 @@
 import threading
 import os
 from google import genai
-from spinner_utils import spinner
+from .spinner_utils import spinner
 
 API_KEYS = [
     os.getenv("GOOGLE_API_KEY_1"),

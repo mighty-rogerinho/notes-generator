@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "notes-generator"
+version = "0.1.0"
+description = "Turn YouTube videos into structured Markdown notes from their transcripts, using Gemini AI"
+requires-python = ">=3.12"
+dependencies = [
+    "google-genai>=2.14.0",
+    "requests>=2.34.2",
+    "pytubefix>=10.10.1",
+    "youtube-transcript-api>=1.2.4",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+notes-generator = "notes_generator.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+notes_generator = ["prompts/*.md"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
