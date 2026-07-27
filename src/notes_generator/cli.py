@@ -10,8 +10,12 @@ from .pipeline import generate_notes_for_video
 from .prompt_utils import PromptNotFoundError, find_prompt_file, select_prompt
 from .youtube_utils import VideoNotFoundError
 
+class EmptyUrlsFileError(ValueError):
+    pass
+
+
 # Bad --category / --urls-file: abort before touching any video.
-SETUP_ERRORS = (PromptNotFoundError, FileNotFoundError)
+SETUP_ERRORS = (PromptNotFoundError, FileNotFoundError, EmptyUrlsFileError)
 
 # One video failing shouldn't sink the rest of a batch.
 PER_VIDEO_ERRORS = (
@@ -47,10 +51,13 @@ def build_arg_parser():
 def resolve_urls(args):
     if args.urls_file:
         with open(args.urls_file, encoding="utf-8") as f:
-            return [
+            urls = [
                 line.strip() for line in f
                 if line.strip() and not line.strip().startswith("#")
             ]
+        if not urls:
+            raise EmptyUrlsFileError(f"No URLs found in {args.urls_file}")
+        return urls
 
     if args.url:
         return [args.url]

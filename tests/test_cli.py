@@ -4,7 +4,13 @@ import pytest
 import requests
 from youtube_transcript_api import TranscriptsDisabled
 
-from notes_generator.cli import build_arg_parser, main, process_video, resolve_urls
+from notes_generator.cli import (
+    EmptyUrlsFileError,
+    build_arg_parser,
+    main,
+    process_video,
+    resolve_urls,
+)
 from notes_generator.gemini_client import AllKeysExhaustedError
 from notes_generator.prompt_utils import PromptNotFoundError
 from notes_generator.youtube_utils import VideoNotFoundError
@@ -43,6 +49,16 @@ def test_resolve_urls_missing_urls_file_raises_file_not_found():
     args = build_arg_parser().parse_args(["--urls-file", "/no/such/file.txt"])
 
     with pytest.raises(FileNotFoundError):
+        resolve_urls(args)
+
+
+def test_resolve_urls_empty_urls_file_raises_instead_of_silently_doing_nothing(tmp_path):
+    urls_file = tmp_path / "videos.txt"
+    urls_file.write_text("# just a comment, no actual URLs\n\n")
+
+    args = build_arg_parser().parse_args(["--urls-file", str(urls_file)])
+
+    with pytest.raises(EmptyUrlsFileError):
         resolve_urls(args)
 
 
@@ -168,6 +184,19 @@ def test_main_missing_urls_file_aborts_cleanly():
          patch("notes_generator.cli.generate_notes_for_video") as mock_generate:
         with pytest.raises(SystemExit) as exc_info:
             main(argv=["--urls-file", "/no/such/file.txt"])
+
+    assert exc_info.value.code == 1
+    mock_generate.assert_not_called()
+
+
+def test_main_empty_urls_file_aborts_instead_of_silently_succeeding(tmp_path):
+    urls_file = tmp_path / "videos.txt"
+    urls_file.write_text("# no actual URLs here\n")
+
+    with patch("notes_generator.cli.load_dotenv"), \
+         patch("notes_generator.cli.generate_notes_for_video") as mock_generate:
+        with pytest.raises(SystemExit) as exc_info:
+            main(argv=["--urls-file", str(urls_file)])
 
     assert exc_info.value.code == 1
     mock_generate.assert_not_called()
