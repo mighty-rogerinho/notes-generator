@@ -1,4 +1,12 @@
-from notes_generator.prompt_utils import build_prompt, list_prompt_files, parse_prompt_file
+import pytest
+
+from notes_generator.prompt_utils import (
+    PromptNotFoundError,
+    build_prompt,
+    find_prompt_file,
+    list_prompt_files,
+    parse_prompt_file,
+)
 
 
 def test_list_prompt_files_returns_only_md_files_sorted(tmp_path):
@@ -9,6 +17,29 @@ def test_list_prompt_files_returns_only_md_files_sorted(tmp_path):
     result = list_prompt_files(tmp_path)
 
     assert result == ["Documentary editor.md", "News editor.md"]
+
+
+def test_find_prompt_file_matches_case_insensitively(tmp_path):
+    (tmp_path / "News editor.md").write_text("news")
+
+    result = find_prompt_file("news EDITOR", tmp_path)
+
+    assert result == tmp_path / "News editor.md"
+
+
+def test_find_prompt_file_matches_with_or_without_md_suffix(tmp_path):
+    (tmp_path / "News editor.md").write_text("news")
+
+    assert find_prompt_file("News editor.md", tmp_path) == tmp_path / "News editor.md"
+    assert find_prompt_file("News editor", tmp_path) == tmp_path / "News editor.md"
+
+
+def test_find_prompt_file_raises_with_available_categories_on_no_match(tmp_path):
+    (tmp_path / "News editor.md").write_text("news")
+    (tmp_path / "Documentary editor.md").write_text("doc")
+
+    with pytest.raises(PromptNotFoundError, match="Documentary editor, News editor"):
+        find_prompt_file("Nonexistent category", tmp_path)
 
 
 def test_parse_prompt_file_extracts_prompt_inputs_header(tmp_path):

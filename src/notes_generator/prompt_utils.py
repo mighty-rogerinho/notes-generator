@@ -22,11 +22,33 @@ def parse_prompt_file(file_path):
     return prompt_text, prompt_inputs
 
 
+class PromptNotFoundError(ValueError):
+    pass
+
+
 def list_prompt_files(prompt_folder=PROMPTS_DIR):
     """Return the sorted list of .md prompt filenames in a folder."""
     return sorted(
         f for f in os.listdir(prompt_folder)
         if f.lower().endswith(".md")
+    )
+
+
+def find_prompt_file(name, prompt_folder=PROMPTS_DIR):
+    """
+    Look up a prompt file by its display name (case-insensitive, .md suffix
+    optional) for non-interactive category selection. Returns its path.
+    """
+    prompt_files = list_prompt_files(prompt_folder)
+    normalized = name.strip().lower().removesuffix(".md")
+
+    for filename in prompt_files:
+        if filename.lower().removesuffix(".md") == normalized:
+            return Path(prompt_folder) / filename
+
+    available = ", ".join(f.removesuffix(".md") for f in prompt_files)
+    raise PromptNotFoundError(
+        f"No prompt category matching {name!r}. Available: {available}"
     )
 
 

@@ -72,11 +72,36 @@ GOOGLE_API_KEY_3=...
 
 ## Run
 
+**Interactive** (no arguments — prompts for everything):
+
 ```bash
 notes-generator
 ```
 
 You'll be prompted for a YouTube URL, then asked to pick a note category from the templates in `src/notes_generator/prompts/`. The generated notes are saved as a `.md` file in `output/` (gitignored — this is where your personal generated notes accumulate, not tracked source).
+
+**Single video, non-interactive:**
+
+```bash
+notes-generator "https://youtu.be/VIDEO_ID" --category "News editor"
+```
+
+`--category` matches a prompt template by its display name (case-insensitive, `.md` suffix optional — same names shown in the interactive menu). Omit it to still pick interactively even when the URL is given as an argument.
+
+**Batch mode** — process a list of videos in one run:
+
+```bash
+cat > videos.txt <<'EOF'
+https://youtu.be/VIDEO_ID_1
+https://youtu.be/VIDEO_ID_2
+# lines starting with # are ignored, as are blank lines
+https://youtu.be/VIDEO_ID_3
+EOF
+
+notes-generator --urls-file videos.txt --category "News editor"
+```
+
+Every URL uses the same category. One video failing (no transcript available, bad URL, etc.) doesn't stop the rest of the batch — it's reported and the run continues; the process exits non-zero if anything failed so it's still scriptable. A summary line (`N/M videos processed successfully.`) prints at the end. The one exception is running out of usable Gemini API keys, which stops the batch immediately rather than burning through the remaining videos on a service that's already unusable.
 
 ## Add a new prompt template
 
