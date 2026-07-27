@@ -8,6 +8,11 @@ from .models import VideoInfo
 
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos"
 
+
+class VideoNotFoundError(ValueError):
+    pass
+
+
 def get_video_info(url):
     """Return a VideoInfo for the given YouTube URL"""
     video_id = extract.video_id(url)
@@ -21,7 +26,7 @@ def get_video_info(url):
 
     items = response.json().get("items")
     if not items:
-        raise ValueError("No video found for this ID")
+        raise VideoNotFoundError("No video found for this ID")
 
     snippet = items[0]["snippet"]
 
@@ -37,11 +42,7 @@ def get_video_info(url):
     )
 
 def get_transcript(video_id):
-    """Return transcript text (all snippets joined)"""
-    try:
-        ytt_api = YouTubeTranscriptApi()
-        fetched_transcript = ytt_api.fetch(video_id)
-        return "\n".join([snippet.text for snippet in fetched_transcript])
-    except Exception as e:
-        print("⚠️ Error fetching transcript:", e)
-        return ""
+    """Return transcript text (all snippets joined). Raises if no transcript is available."""
+    ytt_api = YouTubeTranscriptApi()
+    fetched_transcript = ytt_api.fetch(video_id)
+    return "\n".join([snippet.text for snippet in fetched_transcript])

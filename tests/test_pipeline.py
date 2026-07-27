@@ -1,6 +1,9 @@
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
+import pytest
+from youtube_transcript_api import TranscriptsDisabled
+
 from notes_generator.models import VideoInfo
 from notes_generator.pipeline import generate_notes_for_video
 
@@ -84,9 +87,28 @@ def test_generate_notes_for_video_uses_the_real_gemini_backend_by_default(tmp_pa
 
     with patch("notes_generator.pipeline.get_video_info", return_value=video_info), \
          patch("notes_generator.pipeline.get_transcript", return_value=""), \
-         patch("notes_generator.gemini_client.spinner", lambda done_event, msg: done_event.set()), \
          patch("notes_generator.gemini_client.genai.Client", return_value=fake_client):
         output_path = generate_notes_for_video("https://youtu.be/xyz", prompt_file)
 
     assert output_path == "output/Another Video.md"
     assert (tmp_path / output_path).read_text() == "default backend notes"
+
+
+def test_generate_notes_for_video_propagates_transcript_failure(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    prompt_file = tmp_path / "Test editor.md"
+    prompt_file.write_text("A plain prompt.\n")
+
+    video_info = VideoInfo(
+        video_id="no-captions", title="No Captions Video", description="",
+        publish_date=None, author_name=None,
+    )
+
+    with patch("notes_generator.pipeline.get_video_info", return_value=video_info), \
+         patch("notes_generator.pipeline.get_transcript", side_effect=TranscriptsDisabled("no-captions")):
+        with pytest.raises(TranscriptsDisabled):
+            generate_notes_for_video("https://youtu.be/no-captions", prompt_file, backend=fake_backend)
+
+    # No notes file should have been written for a failed run.
+    assert not (tmp_path / "output").exists()

@@ -107,8 +107,7 @@ src/notes_generator/
     youtube_utils.py    # video metadata + transcript fetching
     prompt_utils.py      # prompt template loading/selection
     gemini_client.py    # Gemini API call + key rotation on quota errors
-    file_utils.py        # output filename/sanitization helpers
-    spinner_utils.py     # terminal spinner while waiting on Gemini
+    file_utils.py        # output filename/sanitization + collision-safe saving
     prompts/             # note-category prompt templates (.md)
 tests/                   # pytest suite, no network calls
 output/                  # generated notes (gitignored)

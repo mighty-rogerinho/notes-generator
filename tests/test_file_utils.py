@@ -70,3 +70,26 @@ def test_save_text_file_without_folder(tmp_path, monkeypatch):
 
     assert returned_path == "notes.md"
     assert (tmp_path / "notes.md").read_text() == "hello world"
+
+
+def test_save_text_file_does_not_overwrite_existing_file(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    first_path = save_text_file("notes.md", "first version", folder="output")
+    second_path = save_text_file("notes.md", "second version", folder="output")
+
+    assert first_path == "output/notes.md"
+    assert second_path == "output/notes (2).md"
+    assert (tmp_path / "output" / "notes.md").read_text() == "first version"
+    assert (tmp_path / "output" / "notes (2).md").read_text() == "second version"
+
+
+def test_save_text_file_increments_past_multiple_collisions(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    save_text_file("notes.md", "v1", folder="output")
+    save_text_file("notes.md", "v2", folder="output")
+    third_path = save_text_file("notes.md", "v3", folder="output")
+
+    assert third_path == "output/notes (3).md"
+    assert (tmp_path / "output" / "notes (3).md").read_text() == "v3"

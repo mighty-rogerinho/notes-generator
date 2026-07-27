@@ -34,11 +34,28 @@ def build_output_filename(title, publish_date=None, author_name=None, max_len=10
     filename = f"{date_str}{safe_title}{author_str}.md"
     return filename
 
+def _make_unique(path):
+    """If path already exists, append ' (2)', ' (3)', ... before the extension until it doesn't."""
+    if not os.path.exists(path):
+        return path
+
+    root, ext = os.path.splitext(path)
+    counter = 2
+    while os.path.exists(f"{root} ({counter}){ext}"):
+        counter += 1
+    return f"{root} ({counter}){ext}"
+
 def save_text_file(filename, text, folder=None):
-    """Save text to a file. If folder is given, joins the path. Returns the path written to."""
+    """Save text to a file. If folder is given, joins the path. Returns the path written to.
+
+    If a file already exists at the target path, a numeric suffix is appended
+    instead of overwriting it.
+    """
     if folder:
         os.makedirs(folder, exist_ok=True)
         filename = os.path.join(folder, filename)
+
+    filename = _make_unique(filename)
 
     with open(filename, "w", encoding="utf-8") as f:
         f.write(text)
