@@ -1,0 +1,9 @@
+# Environment / cache
+venv/
+__pycache__/
+*.pyc
+
+# Generated output (not source code)
+output/
+
+
