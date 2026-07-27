@@ -8,7 +8,7 @@ from youtube_transcript_api import CouldNotRetrieveTranscript
 from .gemini_client import AllKeysExhaustedError
 from .pipeline import generate_notes_for_video
 from .prompt_utils import PromptNotFoundError, find_prompt_file, select_prompt
-from .youtube_utils import VideoNotFoundError
+from .youtube_utils import VideoNotFoundError, expand_playlist_urls
 
 class EmptyUrlsFileError(ValueError):
     pass
@@ -65,6 +65,19 @@ def resolve_urls(args):
     return [input("Enter YouTube URL: ").strip()]
 
 
+def expand_urls(raw_urls):
+    """Expand each raw URL/playlist link into concrete video URLs. A raw
+    entry that fails to expand (e.g. a dead playlist link) is reported and
+    skipped rather than aborting the whole run."""
+    urls = []
+    for raw_url in raw_urls:
+        try:
+            urls.extend(expand_playlist_urls(raw_url))
+        except PER_VIDEO_ERRORS as e:
+            print(f"❌ {raw_url}: {e}")
+    return urls
+
+
 def process_video(url, prompt_file):
     """Generate notes for one video. Returns True on success, False on a
     per-video failure (prints a clean message). Fatal errors propagate."""
@@ -84,10 +97,15 @@ def main(argv=None):
     args = build_arg_parser().parse_args(argv)
 
     try:
-        urls = resolve_urls(args)
+        raw_urls = resolve_urls(args)
         prompt_file = find_prompt_file(args.category) if args.category else select_prompt()
     except SETUP_ERRORS as e:
         print(f"❌ {e}")
+        sys.exit(1)
+
+    urls = expand_urls(raw_urls)
+    if not urls:
+        print("❌ No videos to process.")
         sys.exit(1)
 
     try:

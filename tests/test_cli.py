@@ -7,6 +7,7 @@ from youtube_transcript_api import TranscriptsDisabled
 from notes_generator.cli import (
     EmptyUrlsFileError,
     build_arg_parser,
+    expand_urls,
     main,
     process_video,
     resolve_urls,
@@ -14,6 +15,18 @@ from notes_generator.cli import (
 from notes_generator.gemini_client import AllKeysExhaustedError
 from notes_generator.prompt_utils import PromptNotFoundError
 from notes_generator.youtube_utils import VideoNotFoundError
+
+
+@pytest.fixture(autouse=True)
+def treat_every_url_as_a_single_video(monkeypatch):
+    """Most tests in this file use short placeholder URLs (e.g. .../abc123)
+    and aren't testing playlist expansion specifically - default
+    expand_playlist_urls to a passthrough so they don't exercise real
+    pytubefix URL parsing, which requires realistic 11-char video IDs.
+    Tests that do want real expansion behavior override this locally via
+    their own `with patch("notes_generator.cli.expand_playlist_urls", ...)`.
+    """
+    monkeypatch.setattr("notes_generator.cli.expand_playlist_urls", lambda url: [url])
 
 
 # --- resolve_urls -----------------------------------------------------------
@@ -60,6 +73,38 @@ def test_resolve_urls_empty_urls_file_raises_instead_of_silently_doing_nothing(t
 
     with pytest.raises(EmptyUrlsFileError):
         resolve_urls(args)
+
+
+# --- expand_urls --------------------------------------------------------------
+
+def test_expand_urls_flattens_mixed_raw_entries():
+    def fake_expand(url):
+        if url == "https://youtu.be/playlist-link":
+            return ["https://youtu.be/p1", "https://youtu.be/p2", "https://youtu.be/p3"]
+        return [url]
+
+    with patch("notes_generator.cli.expand_playlist_urls", side_effect=fake_expand):
+        result = expand_urls(["https://youtu.be/single", "https://youtu.be/playlist-link"])
+
+    assert result == [
+        "https://youtu.be/single",
+        "https://youtu.be/p1",
+        "https://youtu.be/p2",
+        "https://youtu.be/p3",
+    ]
+
+
+def test_expand_urls_reports_and_skips_a_failing_entry(capsys):
+    def fake_expand(url):
+        if url == "https://youtu.be/dead-playlist":
+            raise VideoNotFoundError("No videos found in playlist")
+        return [url]
+
+    with patch("notes_generator.cli.expand_playlist_urls", side_effect=fake_expand):
+        result = expand_urls(["https://youtu.be/good", "https://youtu.be/dead-playlist"])
+
+    assert result == ["https://youtu.be/good"]
+    assert "❌ https://youtu.be/dead-playlist:" in capsys.readouterr().out
 
 
 # --- process_video -----------------------------------------------------------
@@ -200,3 +245,35 @@ def test_main_empty_urls_file_aborts_instead_of_silently_succeeding(tmp_path):
 
     assert exc_info.value.code == 1
     mock_generate.assert_not_called()
+
+
+def test_main_playlist_entry_expands_and_summary_reflects_expanded_total(tmp_path, capsys):
+    urls_file = tmp_path / "videos.txt"
+    urls_file.write_text("https://youtu.be/plain\nhttps://youtu.be/playlist-link\n")
+
+    def fake_expand(url):
+        if url == "https://youtu.be/playlist-link":
+            return ["https://youtu.be/p1", "https://youtu.be/p2", "https://youtu.be/p3"]
+        return [url]
+
+    with patch("notes_generator.cli.load_dotenv"), \
+         patch("notes_generator.cli.find_prompt_file", return_value="News editor.md"), \
+         patch("notes_generator.cli.expand_playlist_urls", side_effect=fake_expand), \
+         patch("notes_generator.cli.generate_notes_for_video", return_value="output/notes.md"):
+        main(argv=["--urls-file", str(urls_file), "--category", "News editor"])
+
+    assert "4/4 videos processed successfully." in capsys.readouterr().out
+
+
+def test_main_all_entries_failing_to_expand_aborts_cleanly(capsys):
+    with patch("notes_generator.cli.load_dotenv"), \
+         patch("notes_generator.cli.find_prompt_file", return_value="News editor.md"), \
+         patch("notes_generator.cli.expand_playlist_urls",
+               side_effect=VideoNotFoundError("No videos found in playlist")), \
+         patch("notes_generator.cli.generate_notes_for_video") as mock_generate:
+        with pytest.raises(SystemExit) as exc_info:
+            main(argv=["https://youtu.be/dead-playlist", "--category", "News editor"])
+
+    assert exc_info.value.code == 1
+    mock_generate.assert_not_called()
+    assert "No videos to process." in capsys.readouterr().out

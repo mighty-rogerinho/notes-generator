@@ -103,6 +103,14 @@ notes-generator --urls-file videos.txt --category "News editor"
 
 Every URL uses the same category. One video failing (no transcript available, bad URL, etc.) doesn't stop the rest of the batch — it's reported and the run continues; the process exits non-zero if anything failed so it's still scriptable. A summary line (`N/M videos processed successfully.`) prints at the end. The one exception is running out of usable Gemini API keys, which stops the batch immediately rather than burning through the remaining videos on a service that's already unusable.
 
+**Playlists** are supported the same way, with no extra flag needed — a playlist link works anywhere a video URL does (the positional argument, or a line in `--urls-file`), and is auto-detected and expanded into its individual videos:
+
+```bash
+notes-generator "https://www.youtube.com/playlist?list=PLAYLIST_ID" --category "Documentary editor"
+```
+
+Capped at 100 videos per playlist — if a playlist has more, only the first 100 (in playlist order) are processed, with a warning printed. A `--urls-file` can freely mix individual video URLs and playlist links; each line is expanded independently.
+
 ## Add a new prompt template
 
 Drop a new `.md` file into `src/notes_generator/prompts/`. The first line can optionally declare which pieces of video data the prompt wants, e.g.:

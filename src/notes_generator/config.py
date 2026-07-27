@@ -5,6 +5,7 @@ PROMPTS_DIR = Path(__file__).parent / "prompts"
 SHARED_RULES_PATH = PROMPTS_DIR / "_shared" / "common_rules.md"
 OUTPUT_DIR = "output"
 GEMINI_MODEL = "gemini-3-flash-preview"
+PLAYLIST_VIDEO_LIMIT = 100
 
 
 def get_youtube_api_key():

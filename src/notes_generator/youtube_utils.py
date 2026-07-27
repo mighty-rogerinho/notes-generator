@@ -1,9 +1,10 @@
 import requests
 from datetime import datetime
-from pytubefix import extract
+from pytubefix import Playlist, extract
+from pytubefix.extract import RegexMatchError
 from youtube_transcript_api import YouTubeTranscriptApi
 
-from .config import get_youtube_api_key
+from .config import PLAYLIST_VIDEO_LIMIT, get_youtube_api_key
 from .models import VideoInfo
 
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos"
@@ -46,3 +47,29 @@ def get_transcript(video_id):
     ytt_api = YouTubeTranscriptApi()
     fetched_transcript = ytt_api.fetch(video_id)
     return "\n".join([snippet.text for snippet in fetched_transcript])
+
+def expand_playlist_urls(url):
+    """
+    If url is a single video (with or without an incidental list= param),
+    return [url] unchanged. If url is a playlist link, return up to
+    PLAYLIST_VIDEO_LIMIT video URLs from it, in playlist order.
+    """
+    try:
+        extract.video_id(url)
+        return [url]
+    except RegexMatchError:
+        pass
+
+    try:
+        video_urls = list(Playlist(url).video_urls)
+    except KeyError:
+        raise VideoNotFoundError(f"Could not find a video or playlist at this URL: {url}")
+
+    if not video_urls:
+        raise VideoNotFoundError(f"No videos found in playlist: {url}")
+
+    if len(video_urls) > PLAYLIST_VIDEO_LIMIT:
+        print(f"⚠️ Playlist has {len(video_urls)} videos; only processing the first {PLAYLIST_VIDEO_LIMIT}.")
+        video_urls = video_urls[:PLAYLIST_VIDEO_LIMIT]
+
+    return video_urls
