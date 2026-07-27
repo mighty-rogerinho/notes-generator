@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-DEFAULT_PROMPTS_DIR = Path(__file__).parent / "prompts"
+from .config import PROMPTS_DIR
 
 
 def parse_prompt_file(file_path):
@@ -22,29 +22,32 @@ def parse_prompt_file(file_path):
     return prompt_text, prompt_inputs
 
 
-def select_prompt(prompt_folder=DEFAULT_PROMPTS_DIR):
-    """
-    Dynamically loads all .md prompt files from a folder,
-    asks the user to choose one, and returns:
-    (prompt_text, prompt_inputs)
-    """
-
-    # 1. Get all .md files
-    prompt_files = sorted(
+def list_prompt_files(prompt_folder=PROMPTS_DIR):
+    """Return the sorted list of .md prompt filenames in a folder."""
+    return sorted(
         f for f in os.listdir(prompt_folder)
         if f.lower().endswith(".md")
     )
 
+
+def select_prompt(prompt_folder=PROMPTS_DIR):
+    """
+    Interactively ask the user to choose a prompt category from a folder
+    of .md prompt files. Returns the path of the selected prompt file.
+    """
+
+    prompt_files = list_prompt_files(prompt_folder)
+
     if not prompt_files:
         raise ValueError("No .md prompt files found in the prompts folder.")
 
-    # 2. Display menu
+    # Display menu
     print("Select a category for this video:")
     for index, filename in enumerate(prompt_files, start=1):
         display_name = filename.replace(".md", "")
         print(f"{index}: {display_name}")
 
-    # 3. Validate user input
+    # Validate user input
     while True:
         choice = input("Enter number: ").strip()
         if choice.isdigit():
@@ -54,14 +57,11 @@ def select_prompt(prompt_folder=DEFAULT_PROMPTS_DIR):
         print("Invalid choice. Please enter a valid number.")
 
     selected_file = prompt_files[choice_index]
-    file_path = os.path.join(prompt_folder, selected_file)
-
-    # 4. Read file and parse metadata
-    prompt_text, prompt_inputs = parse_prompt_file(file_path)
+    file_path = Path(prompt_folder) / selected_file
 
     print(f"\n✅ Using prompt file: {selected_file}")
 
-    return prompt_text, prompt_inputs
+    return file_path
 
 def build_prompt(prompt_text: str, prompt_inputs: list[str], prompt_data: dict) -> str:
     """

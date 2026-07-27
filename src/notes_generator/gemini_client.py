@@ -1,14 +1,10 @@
 import threading
-import os
 from google import genai
+from .config import GEMINI_MODEL, get_gemini_api_keys
 from .spinner_utils import spinner
 
 def generate_notes(prompt_text):
-    api_keys = [
-        os.getenv("GOOGLE_API_KEY_1"),
-        os.getenv("GOOGLE_API_KEY_2"),
-        os.getenv("GOOGLE_API_KEY_3")
-    ]
+    api_keys = get_gemini_api_keys()
 
     done_event = threading.Event()
 
@@ -23,7 +19,7 @@ def generate_notes(prompt_text):
                 client = genai.Client(api_key=key)
 
                 response = client.models.generate_content(
-                    model="gemini-3-flash-preview",
+                    model=GEMINI_MODEL,
                     contents=prompt_text
                 )
 

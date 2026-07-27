@@ -35,10 +35,12 @@ def build_output_filename(title, publish_date=None, author_name=None, max_len=10
     return filename
 
 def save_text_file(filename, text, folder=None):
-    """Save text to a file. If folder is given, joins the path"""
+    """Save text to a file. If folder is given, joins the path. Returns the path written to."""
     if folder:
         os.makedirs(folder, exist_ok=True)
         filename = os.path.join(folder, filename)
-    
+
     with open(filename, "w", encoding="utf-8") as f:
         f.write(text)
+
+    return filename

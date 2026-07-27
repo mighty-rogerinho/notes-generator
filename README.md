@@ -100,7 +100,10 @@ Tests cover the pure logic (filename sanitization, prompt building/parsing) and 
 
 ```
 src/notes_generator/
-    cli.py             # entry point (installed as the `notes-generator` command)
+    cli.py             # entry point (installed as the `notes-generator` command) — interactive shell only
+    pipeline.py          # generate_notes_for_video: the actual fetch -> build -> generate -> save pipeline
+    config.py             # settings + env var access, all in one place
+    models.py             # VideoInfo dataclass, NotesBackend type (the "prompt in, notes out" shape)
     youtube_utils.py    # video metadata + transcript fetching
     prompt_utils.py      # prompt template loading/selection
     gemini_client.py    # Gemini API call + key rotation on quota errors
@@ -110,3 +113,5 @@ src/notes_generator/
 tests/                   # pytest suite, no network calls
 output/                  # generated notes (gitignored)
 ```
+
+`cli.py` only handles interactive input; `pipeline.generate_notes_for_video(url, prompt_file)` has no `input()` calls at all, so it can be driven directly (scripts, tests, or a future non-interactive CLI) without going through the terminal prompts.

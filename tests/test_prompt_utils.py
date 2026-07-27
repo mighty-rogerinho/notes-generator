@@ -1,4 +1,14 @@
-from notes_generator.prompt_utils import build_prompt, parse_prompt_file
+from notes_generator.prompt_utils import build_prompt, list_prompt_files, parse_prompt_file
+
+
+def test_list_prompt_files_returns_only_md_files_sorted(tmp_path):
+    (tmp_path / "News editor.md").write_text("news")
+    (tmp_path / "Documentary editor.md").write_text("doc")
+    (tmp_path / "notes.txt").write_text("not a prompt")
+
+    result = list_prompt_files(tmp_path)
+
+    assert result == ["Documentary editor.md", "News editor.md"]
 
 
 def test_parse_prompt_file_extracts_prompt_inputs_header(tmp_path):

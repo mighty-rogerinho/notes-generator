@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from notes_generator.file_utils import build_output_filename, sanitize_filename
+from notes_generator.file_utils import build_output_filename, sanitize_filename, save_text_file
 
 
 def test_sanitize_filename_replaces_colon_and_removes_invalid_chars():
@@ -52,3 +52,21 @@ def test_build_output_filename_without_author():
 def test_build_output_filename_without_date_or_author():
     result = build_output_filename("My Video")
     assert result == "My Video.md"
+
+
+def test_save_text_file_writes_content_and_returns_path(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    returned_path = save_text_file("notes.md", "hello world", folder="output")
+
+    assert returned_path == "output/notes.md"
+    assert (tmp_path / "output" / "notes.md").read_text() == "hello world"
+
+
+def test_save_text_file_without_folder(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    returned_path = save_text_file("notes.md", "hello world")
+
+    assert returned_path == "notes.md"
+    assert (tmp_path / "notes.md").read_text() == "hello world"
