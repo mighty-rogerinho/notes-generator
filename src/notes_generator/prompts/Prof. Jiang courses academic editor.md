@@ -66,14 +66,7 @@ Example format:
 4. Markdown Formatting Requirements
 ------------------------------------------------------------
 
-The output MUST be clean, properly formatted Markdown and immediately copy-pastable.
-
-Do NOT include:
-- Explanatory comments
-- Meta-commentary
-- Notes about what you did
-- Any text outside the Markdown notes
-- Markdown horizontal rules (`***` or `---`)
+{{SHARED_RULES}}
 
 Structure using:
 

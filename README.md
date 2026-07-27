@@ -113,6 +113,8 @@ PROMPT_INPUTS: title, description, publish_date, transcript
 
 Only fields listed here (and present in the video data) get appended to the prompt sent to Gemini. Everything else in the file is the prompt body.
 
+Include the `{{SHARED_RULES}}` placeholder anywhere you want the common Markdown-hygiene rules injected (no meta-commentary, no horizontal rules, no emojis, etc.) — typically right before your "Structure using:" section, matching the three existing templates. Those shared rules live in one place, `src/notes_generator/prompts/_shared/common_rules.md`, so a rule that should apply to every category only needs editing once. That file isn't itself a selectable category — it's excluded automatically since prompt selection only looks at `.md` files directly inside `prompts/`, not its `_shared/` subfolder.
+
 ## Run tests
 
 ```bash
@@ -134,6 +136,7 @@ src/notes_generator/
     gemini_client.py    # Gemini API call + key rotation on quota errors
     file_utils.py        # output filename/sanitization + collision-safe saving
     prompts/             # note-category prompt templates (.md)
+        _shared/          # common_rules.md - hygiene rules shared by every category via {{SHARED_RULES}}
 tests/                   # pytest suite, no network calls
 output/                  # generated notes (gitignored)
 ```

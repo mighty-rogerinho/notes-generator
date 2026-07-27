@@ -52,7 +52,7 @@ Follow these rules strictly:
 4. Markdown Structure
 ------------------------------------------------------------
 
-Do not use Markdown horizontal rules (`***` or `---`) anywhere in the output.
+{{SHARED_RULES}}
 
 Structure your output using the following sections:
 

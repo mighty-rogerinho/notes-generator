@@ -138,15 +138,7 @@ Do not convert speculation or predictions into factual reporting.
 4. Markdown Formatting Requirements
 ------------------------------------------------------------
 
-The output MUST be clean, properly formatted Markdown and immediately copy-pastable.
-
-Do NOT include:
-
-- explanatory comments
-- meta-commentary
-- notes about what you did
-- any text outside the Markdown report
-- Markdown horizontal rules (`***` or `---`)
+{{SHARED_RULES}}
 
 Structure using:
 

@@ -25,7 +25,7 @@ notes-generator = "notes_generator.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-notes_generator = ["prompts/*.md"]
+notes_generator = ["prompts/*.md", "prompts/_shared/*.md"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

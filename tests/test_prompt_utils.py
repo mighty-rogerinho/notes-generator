@@ -1,5 +1,6 @@
 import pytest
 
+from notes_generator.config import PROMPTS_DIR, SHARED_RULES_PATH
 from notes_generator.prompt_utils import (
     PromptNotFoundError,
     build_prompt,
@@ -63,6 +64,45 @@ def test_parse_prompt_file_without_header_returns_empty_inputs(tmp_path):
 
     assert prompt_inputs == []
     assert prompt_text == "Just a plain prompt body.\n"
+
+
+def test_parse_prompt_file_substitutes_shared_rules_placeholder(tmp_path):
+    shared_rules_file = tmp_path / "common_rules.md"
+    shared_rules_file.write_text("Shared hygiene rules go here.")
+
+    prompt_file = tmp_path / "Test editor.md"
+    prompt_file.write_text(
+        "You are a test editor.\n\n{{SHARED_RULES}}\n\nStructure using: ...\n"
+    )
+
+    prompt_text, _ = parse_prompt_file(prompt_file, shared_rules_path=shared_rules_file)
+
+    assert "{{SHARED_RULES}}" not in prompt_text
+    assert "Shared hygiene rules go here." in prompt_text
+
+
+def test_parse_prompt_file_without_placeholder_never_reads_shared_rules(tmp_path):
+    prompt_file = tmp_path / "Test editor.md"
+    prompt_file.write_text("A prompt with no shared-rules placeholder at all.\n")
+
+    prompt_text, _ = parse_prompt_file(
+        prompt_file, shared_rules_path=tmp_path / "does-not-exist.md"
+    )
+
+    assert prompt_text == "A prompt with no shared-rules placeholder at all.\n"
+
+
+@pytest.mark.parametrize("filename", [
+    "Documentary editor.md",
+    "News editor.md",
+    "Prof. Jiang courses academic editor.md",
+])
+def test_real_prompt_files_wire_up_shared_rules_correctly(filename):
+    prompt_text, _ = parse_prompt_file(PROMPTS_DIR / filename, shared_rules_path=SHARED_RULES_PATH)
+
+    assert "{{SHARED_RULES}}" not in prompt_text
+    assert "Do NOT include:" in prompt_text
+    assert "Markdown horizontal rules" in prompt_text
 
 
 def test_build_prompt_numbers_sections_in_order():

@@ -1,12 +1,16 @@
 import os
 from pathlib import Path
 
-from .config import PROMPTS_DIR
+from .config import PROMPTS_DIR, SHARED_RULES_PATH
+
+SHARED_RULES_PLACEHOLDER = "{{SHARED_RULES}}"
 
 
-def parse_prompt_file(file_path):
+def parse_prompt_file(file_path, shared_rules_path=SHARED_RULES_PATH):
     """
     Read a prompt .md file and split off its optional 'PROMPT_INPUTS:' header line.
+    If the body contains the {{SHARED_RULES}} placeholder, substitute it with the
+    contents of shared_rules_path (rules meant to apply to every prompt category).
     Returns (prompt_text, prompt_inputs).
     """
     with open(file_path, "r", encoding="utf-8") as f:
@@ -18,6 +22,11 @@ def parse_prompt_file(file_path):
         prompt_text = "".join(lines[1:])  # remove metadata line
     else:
         prompt_text = "".join(lines)
+
+    if SHARED_RULES_PLACEHOLDER in prompt_text:
+        with open(shared_rules_path, "r", encoding="utf-8") as f:
+            shared_rules = f.read().strip()
+        prompt_text = prompt_text.replace(SHARED_RULES_PLACEHOLDER, shared_rules)
 
     return prompt_text, prompt_inputs
 
