@@ -73,13 +73,20 @@ Do NOT include:
 - Meta-commentary
 - Notes about what you did
 - Any text outside the Markdown notes
+- Markdown horizontal rules (`***` or `---`)
 
 Structure using:
 
 # Lecture Title (based on the provided video title, cleaned if necessary)
 
-## Major Sections
-### Subsections (if needed)
+## I. Major Section Title
+### A. Subsection Title (if needed)
+### B. Subsection Title (if needed)
+
+## II. Major Section Title
+### A. Subsection Title (if needed)
+
+Number every major section with Roman numerals (I, II, III, ...) and every subsection with letters (A, B, C, ...), consistently, regardless of how many sections the lecture requires. Do not fall back to unnumbered headers.
 
 Formatting rules:
 

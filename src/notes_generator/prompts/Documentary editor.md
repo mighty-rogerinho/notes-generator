@@ -52,6 +52,8 @@ Follow these rules strictly:
 4. Markdown Structure
 ------------------------------------------------------------
 
+Do not use Markdown horizontal rules (`***` or `---`) anywhere in the output.
+
 Structure your output using the following sections:
 
 # Documentary Title (based on video title)
@@ -110,7 +112,7 @@ Example format:
 
 - **Name** — Role or historical significance within the events described.
 
-## Expert Commentary
+## Expert Commentary (if applicable)
 
 List experts, scholars, analysts, or witnesses cited or interviewed in the documentary.
 
@@ -127,6 +129,8 @@ If quotations are provided, include them using blockquotes.
 Example:
 
 > Quotation from the documentary.
+
+If the documentary is pure narration with no named experts, scholars, or witnesses interviewed or cited, state "No specific experts are cited in this documentary" rather than inventing commentary or presenting the narrator's own claims as expert testimony.
 
 ------------------------------------------------------------
 5. Tone and Style

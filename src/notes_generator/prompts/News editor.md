@@ -146,6 +146,7 @@ Do NOT include:
 - meta-commentary
 - notes about what you did
 - any text outside the Markdown report
+- Markdown horizontal rules (`***` or `---`)
 
 Structure using:
 
