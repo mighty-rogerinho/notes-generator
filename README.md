@@ -49,6 +49,43 @@ pip install -e ".[dev]"
 
 Windows's official installer provides the `py` launcher instead of a bare `python3`. If you're running this from Git Bash or WSL instead of PowerShell/cmd, follow the Linux instructions above.
 
+### Termux (Android)
+
+A plain `pip install -e ".[dev]"` fails here: pip has no prebuilt wheels for Android, so it tries to compile `cryptography` and `pydantic-core` from source (needs Rust) and `nodejs-wheel-binaries` (needed by `pytubefix` to run YouTube's signature-decryption JS; has no viable source build at all — it'd need a full Node.js build toolchain).
+
+Run this instead — it's the whole workaround in one copy-pasteable block, so you can paste it as-is any time you need to set this up from scratch:
+
+```bash
+pkg install python-cryptography rust binutils nodejs
+python3 -m venv --system-site-packages venv
+source venv/bin/activate
+
+# pytubefix expects a bundled Node binary at a specific path rather than
+# checking PATH, so it won't find Termux's nodejs package on its own.
+# This shim package points it there instead of letting pip try (and fail)
+# to build nodejs-wheel-binaries from source.
+mkdir -p /tmp/nodejs_wheel_shim/src/nodejs_wheel
+touch /tmp/nodejs_wheel_shim/src/nodejs_wheel/__init__.py
+cat > /tmp/nodejs_wheel_shim/pyproject.toml <<'EOF'
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nodejs-wheel-binaries"
+version = "22.20.0"
+EOF
+cat > /tmp/nodejs_wheel_shim/src/nodejs_wheel/executable.py <<'EOF'
+import os, shutil
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(shutil.which("node"))))
+EOF
+pip install /tmp/nodejs_wheel_shim
+
+pip install -e ".[dev]"
+```
+
+What each part does: `pkg install` pulls in Termux's own prebuilt `cryptography` and Node, plus a Rust toolchain (Termux's targets Android natively, unlike rustup's). The venv is created with `--system-site-packages` so it can see that prebuilt `cryptography`. The `cat > ... <<'EOF' ... EOF` blocks each write one file of the shim package — everything between the two `EOF` markers becomes that file's contents. `pip install /tmp/nodejs_wheel_shim` registers the shim so the final `pip install -e ".[dev]"` sees `nodejs-wheel-binaries` as already satisfied instead of trying (and failing) to build it. `pydantic-core` still compiles from source during that last step, which takes a minute or two — that's expected.
+
 ---
 
 Any of the above installs the package in editable mode and puts a `notes-generator` command on your `PATH` for the rest of this README (see `[project.scripts]` in `pyproject.toml`). You'll need to `source venv/bin/activate` (or `venv\Scripts\activate` on Windows) again in each new terminal session before running `notes-generator`.
