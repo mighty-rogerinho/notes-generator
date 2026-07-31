@@ -94,6 +94,40 @@ def test_generate_notes_for_video_uses_the_real_gemini_backend_by_default(tmp_pa
     assert (tmp_path / output_path).read_text() == "default backend notes"
 
 
+def test_generate_notes_for_video_skips_already_generated_video(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+
+    prompt_file = tmp_path / "Test editor.md"
+    prompt_file.write_text(
+        "PROMPT_INPUTS: title, transcript\n"
+        "You are a test editor.\n"
+    )
+
+    video_info = VideoInfo(
+        video_id="abc123",
+        title="My Video",
+        description="A description",
+        publish_date=datetime(2024, 4, 10),
+        author_name="Some Channel",
+    )
+
+    existing_path = tmp_path / "output" / "2024-04-10 - My Video (Some Channel).md"
+    existing_path.parent.mkdir(parents=True)
+    existing_path.write_text("previously generated notes")
+
+    get_transcript_mock = MagicMock(return_value="hello world transcript")
+
+    with patch("notes_generator.pipeline.get_video_info", return_value=video_info), \
+         patch("notes_generator.pipeline.get_transcript", get_transcript_mock):
+        output_path = generate_notes_for_video(
+            "https://youtu.be/abc123", prompt_file, backend=fake_backend
+        )
+
+    assert output_path == "output/2024-04-10 - My Video (Some Channel).md"
+    assert existing_path.read_text() == "previously generated notes"
+    get_transcript_mock.assert_not_called()
+
+
 def test_generate_notes_for_video_propagates_transcript_failure(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
 

@@ -1,3 +1,5 @@
+import os
+
 from .config import OUTPUT_DIR
 from .file_utils import build_output_filename, save_text_file
 from .gemini_client import generate_notes
@@ -11,6 +13,12 @@ def generate_notes_for_video(url: str, prompt_file, backend: NotesBackend = gene
     Fetch a video's metadata and transcript, build the prompt for the given
     prompt template file, generate notes via `backend`, and save the result.
 
+    If notes for this video already exist in OUTPUT_DIR (same title/date/
+    author), skips the transcript fetch and backend call entirely and
+    returns the existing path. This makes re-running the same playlist/
+    urls-file resume from wherever it left off, without re-spending
+    transcript or Gemini calls on videos already done.
+
     Contains no input() calls, so it can be driven by any caller (interactive
     CLI, future non-interactive CLI flags, batch scripts, tests) — just pass
     in a URL and a prompt file path.
@@ -18,6 +26,14 @@ def generate_notes_for_video(url: str, prompt_file, backend: NotesBackend = gene
     Returns the path the notes were saved to.
     """
     video_info = get_video_info(url)
+
+    output_filename = build_output_filename(video_info.title, video_info.publish_date, video_info.author_name)
+    output_path = os.path.join(OUTPUT_DIR, output_filename) if OUTPUT_DIR else output_filename
+
+    if os.path.exists(output_path):
+        print(f"⏭️  Notes already exist, skipping: {output_path}")
+        return output_path
+
     transcript = get_transcript(video_info.video_id)
 
     prompt_text, prompt_inputs = parse_prompt_file(prompt_file)
@@ -34,5 +50,4 @@ def generate_notes_for_video(url: str, prompt_file, backend: NotesBackend = gene
 
     output_text = backend(full_prompt)
 
-    output_filename = build_output_filename(video_info.title, video_info.publish_date, video_info.author_name)
     return save_text_file(output_filename, output_text, folder=OUTPUT_DIR)
