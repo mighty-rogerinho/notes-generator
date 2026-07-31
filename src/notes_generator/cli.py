@@ -3,6 +3,7 @@ import sys
 
 import requests
 from dotenv import load_dotenv
+from google.genai import errors as genai_errors
 from youtube_transcript_api import CouldNotRetrieveTranscript
 
 from .gemini_client import AllKeysExhaustedError
@@ -22,6 +23,7 @@ PER_VIDEO_ERRORS = (
     VideoNotFoundError,
     CouldNotRetrieveTranscript,
     requests.exceptions.HTTPError,
+    genai_errors.ServerError,
 )
 
 # Every Gemini key is dead - retrying the next video won't help either.

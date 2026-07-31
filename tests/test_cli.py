@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 import pytest
 import requests
+from google.genai import errors as genai_errors
 from youtube_transcript_api import TranscriptsDisabled
 
 from notes_generator.cli import (
@@ -121,6 +122,7 @@ def test_process_video_returns_true_on_success(capsys):
     VideoNotFoundError("No video found for this ID"),
     TranscriptsDisabled("abc123"),
     requests.exceptions.HTTPError("403 Client Error"),
+    genai_errors.ServerError(503, {"message": "high demand", "status": "UNAVAILABLE"}),
 ])
 def test_process_video_returns_false_and_prints_clean_message_on_per_video_errors(exc, capsys):
     with patch("notes_generator.cli.generate_notes_for_video", side_effect=exc):
