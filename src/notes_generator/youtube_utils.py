@@ -1,10 +1,12 @@
+import time
+
 import requests
 from datetime import datetime
 from pytubefix import Playlist, extract
 from pytubefix.extract import RegexMatchError
 from youtube_transcript_api import YouTubeTranscriptApi
 
-from .config import PLAYLIST_VIDEO_LIMIT, get_youtube_api_key
+from .config import PLAYLIST_VIDEO_LIMIT, TRANSCRIPT_REQUEST_DELAY_SECONDS, get_youtube_api_key
 from .models import VideoInfo
 
 YOUTUBE_API_URL = "https://www.googleapis.com/youtube/v3/videos"
@@ -43,9 +45,15 @@ def get_video_info(url):
     )
 
 def get_transcript(video_id):
-    """Return transcript text (all snippets joined). Raises if no transcript is available."""
+    """Return transcript text (all snippets joined). Raises if no transcript is available.
+
+    Sleeps briefly after a successful fetch to space out consecutive requests
+    to YouTube's transcript endpoint - fetching many videos back-to-back with
+    no pause is what triggers YouTube's IP-based rate limiting mid-playlist.
+    """
     ytt_api = YouTubeTranscriptApi()
     fetched_transcript = ytt_api.fetch(video_id)
+    time.sleep(TRANSCRIPT_REQUEST_DELAY_SECONDS)
     return "\n".join([snippet.text for snippet in fetched_transcript])
 
 def expand_playlist_urls(url):

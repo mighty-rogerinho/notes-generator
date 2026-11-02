@@ -3,11 +3,17 @@ from unittest.mock import MagicMock, patch
 import pytest
 from youtube_transcript_api import TranscriptsDisabled
 
+from notes_generator import youtube_utils
 from notes_generator.youtube_utils import (
     VideoNotFoundError,
     expand_playlist_urls,
     get_transcript,
 )
+
+
+@pytest.fixture(autouse=True)
+def no_real_sleep(monkeypatch):
+    monkeypatch.setattr("notes_generator.youtube_utils.time.sleep", lambda _: None)
 
 
 def test_get_transcript_joins_snippet_text():
@@ -20,6 +26,19 @@ def test_get_transcript_joins_snippet_text():
         result = get_transcript("some-video-id")
 
     assert result == "Hello\nworld"
+
+
+def test_get_transcript_pauses_after_a_successful_fetch(monkeypatch):
+    sleep_mock = MagicMock()
+    monkeypatch.setattr("notes_generator.youtube_utils.time.sleep", sleep_mock)
+
+    fake_api = MagicMock()
+    fake_api.fetch.return_value = [MagicMock(text="Hello")]
+
+    with patch("notes_generator.youtube_utils.YouTubeTranscriptApi", return_value=fake_api):
+        get_transcript("some-video-id")
+
+    sleep_mock.assert_called_once_with(youtube_utils.TRANSCRIPT_REQUEST_DELAY_SECONDS)
 
 
 def test_get_transcript_propagates_error_instead_of_swallowing_it():

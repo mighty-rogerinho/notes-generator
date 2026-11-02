@@ -7,6 +7,10 @@ OUTPUT_DIR = "output"
 GEMINI_MODEL = "gemini-3-flash-preview"
 PLAYLIST_VIDEO_LIMIT = 100
 
+# Space out transcript fetches so a playlist run doesn't hammer YouTube's
+# transcript endpoint fast enough to trip its IP-based rate limiting.
+TRANSCRIPT_REQUEST_DELAY_SECONDS = 2
+
 
 def get_youtube_api_key():
     return os.getenv("YOUTUBE_API_KEY")
