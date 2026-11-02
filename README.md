@@ -1,6 +1,6 @@
 # notes-generator
 
-Turns a YouTube video into structured Markdown notes: it pulls the video's metadata and transcript, feeds them into a category-specific prompt (documentary, news, academic lecture, ...), and asks Gemini to write up clean, structured notes.
+Turns a YouTube video into structured Markdown notes: it pulls the video's metadata and transcript, feeds them into a category-specific prompt (documentary, news, academic lecture, talk/presentation, ...), and asks Gemini to write up clean, structured notes.
 
 ## Prerequisites
 

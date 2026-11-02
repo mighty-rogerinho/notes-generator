@@ -96,6 +96,7 @@ def test_parse_prompt_file_without_placeholder_never_reads_shared_rules(tmp_path
     "Documentary editor.md",
     "News editor.md",
     "Prof. Jiang courses academic editor.md",
+    "Talk or presentation editor.md",
 ])
 def test_real_prompt_files_wire_up_shared_rules_correctly(filename):
     prompt_text, _ = parse_prompt_file(PROMPTS_DIR / filename, shared_rules_path=SHARED_RULES_PATH)
